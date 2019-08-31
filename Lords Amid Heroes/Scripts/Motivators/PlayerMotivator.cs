@@ -69,6 +69,8 @@ public class PlayerMotivator : Singleton<PlayerMotivator>
 
     private bool dragAndDrop = false;
 
+    // team
+    private team playersTeam;
 
     // Start is called before the first frame update
     void Start()
@@ -97,6 +99,11 @@ public class PlayerMotivator : Singleton<PlayerMotivator>
         }
 
         skillBar = actorSelf.getSkillBar();
+        if (skillBar == null)
+        {
+            Debug.Log("Warning! skillBar not here after pulling from actor.");
+            skillBar = new GameObject[8];
+        }
         int index = 0;
         foreach (GameObject target in skillBar)
         {
@@ -320,25 +327,54 @@ public class PlayerMotivator : Singleton<PlayerMotivator>
 
     public void replaceSkill(int index, GameObject newSkill)
     {
-        //TODO: check if the skill is already on skillbar
-
+        BaseSkill skill = newSkill.GetComponent<BaseSkill>();
         GameObject ToBeDestroyed = skillBar[index];
-        skillBar[index] = Instantiate(newSkill, skillSlots[index].transform);
-        RectTransform rt = skillBar[index].GetComponent<RectTransform>();
-        if (rt != null)
+
+        if (skill != null)
         {
-            rt.sizeDelta = new Vector2(80.0f, 80.0f);
+            foreach (GameObject s in skillBar)
+            {
+                if(s != null)
+                {
+                    BaseSkill t = s.GetComponent<BaseSkill>();
+                    if (t != null)
+                    {
+                        if (t.getID() == skill.getID())
+                        {
+                            // replaceSkill(System.Array.IndexOf(skillBar, s), ToBeDestroyed);
+                            int switchIndex = System.Array.IndexOf(skillBar, s);
+                            Destroy(skillBar[switchIndex]);
+                            placeSkill(switchIndex, ToBeDestroyed);
+                            // instead, call the place function twice
+                        }
+                    }
+                }
+            }
         }
-        skillBar[index].transform.localPosition = new Vector3(0, 0, 0);
-        skillBar[index].transform.SetSiblingIndex(0);
-        actorSelf.skillChange(index, skillBar[index]);
-        if(ToBeDestroyed != null)
+        placeSkill(index, newSkill);
+        // seperate this into a function
+        if (ToBeDestroyed != null)
         {
-            Debug.Log(ToBeDestroyed.name);
+            Debug.Log("Destroying: " + ToBeDestroyed.name);
             Destroy(ToBeDestroyed);
         }
     }
 
+    private void placeSkill(int index, GameObject newSkill)
+    {
+        if (newSkill != null)
+        {
+            skillBar[index] = Instantiate(newSkill, skillSlots[index].transform);
+            RectTransform rt = skillBar[index].GetComponent<RectTransform>();
+            if (rt != null)
+            {
+                rt.sizeDelta = new Vector2(80.0f, 80.0f);
+            }
+            skillBar[index].transform.localPosition = new Vector3(0, 0, 0);
+            skillBar[index].transform.SetSiblingIndex(0);
+            actorSelf.skillChange(index, skillBar[index]);
+        }
+    }
     public void toggleDragAndDrop(bool setting)
     {
         dragAndDrop = setting;
@@ -369,5 +405,12 @@ public class PlayerMotivator : Singleton<PlayerMotivator>
     public OrderEnum GetSecondaryOrderEnum()
     {
         return actorSelf.getSecondaryOrderEnum();
+    }
+
+    public void setTeam(team team)
+    {
+        Debug.Log("setTeam Called");
+        playersTeam = team;
+        actorSelf.setTeam(team);
     }
 }

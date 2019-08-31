@@ -44,6 +44,13 @@ public class CombatMotivator : BasicMotivator
             interestLost();
         }
         
+        if(inCombat && (rand.Next(1000) == 0 || targetActor.getDeathState() || targetActor == null))
+        {
+            // this should use an observable to trigger getDeathState. only uses n cycles during combat.
+            // where n = number of combat motivators involved.
+            getRandomTarget();
+        }
+
         if(inCombat && actorSelf.queueCount() < planning)
         {
             actorSelf.skillEnqueue(rand.Next(skillCount - 1), targetActor);
@@ -66,6 +73,10 @@ public class CombatMotivator : BasicMotivator
         //unsub.Dispose();
     }
 
+    private ObjectActor getRandomTarget()
+    {
+        return targets[rand.Next(targets.Count - 1)];
+    }
 
     public override void dying()
     {

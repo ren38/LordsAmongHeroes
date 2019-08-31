@@ -7,13 +7,13 @@ public abstract class Quest : MonoBehaviour
     protected QuestLog log;
     protected int prioraty;
 
-    protected string name;
+    protected string qName;
     protected string description;
     protected List<int> skillRewards;
 
     public string getName()
     {
-        return name;
+        return qName;
     }
     public string getDescription() { return description; }
 

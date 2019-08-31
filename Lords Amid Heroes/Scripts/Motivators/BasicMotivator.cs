@@ -8,18 +8,37 @@ public abstract class BasicMotivator : MonoBehaviour
     protected ObjectActor actorSelf;
     protected team myTeam;
     protected bool inCombat = false;
-    protected GameObject target;
+    protected List<ObjectActor> targets;
 
-    public virtual void newTargetIndividual(GameObject newTarget)
+    public void checkTargetList()
     {
-        target = newTarget;
+        if(targets == null)
+        {
+            targets = new List<ObjectActor>();
+        }
+    }
+
+    public virtual void newTargetIndividual(ObjectActor newTarget)
+    {
+        checkTargetList();
+        targets.Add(newTarget);
         inCombat = true;
     }
     
+    public virtual void newTargetGroup(List<ObjectActor> newList)
+    {
+        checkTargetList();
+        foreach (ObjectActor actor in newList)
+        {
+            targets.Add(actor);
+        }
+        inCombat = true;
+    }
+
     public void leaveCombat()
     {
         inCombat = false;
-        target = null;
+        targets.Clear();
     }
 
     public void interestLost()

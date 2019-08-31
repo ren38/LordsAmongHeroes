@@ -13,7 +13,7 @@ public class SkillMouseOver : MonoBehaviour, IPointerEnterHandler, IPointerExitH
     private GameObject panelObject;
     private SkillInfoPanel panel;
     private Vector3 Offset;
-    private bool enabled = true;
+    private bool MOEnabled = true;
 
     public void Start()
     {
@@ -37,7 +37,7 @@ public class SkillMouseOver : MonoBehaviour, IPointerEnterHandler, IPointerExitH
     // Update is called once per frame
     void Update()
     {
-        if (phase == 1 && Time.time >= nextPhase && enabled)
+        if (phase == 1 && Time.time >= nextPhase && MOEnabled)
         {
             phase = 2;
             nextPhase = Time.time + secondDelay;
@@ -66,6 +66,6 @@ public class SkillMouseOver : MonoBehaviour, IPointerEnterHandler, IPointerExitH
 
     public void toggle(bool setting)
     {
-        enabled = setting;
+        MOEnabled = setting;
     }
 }

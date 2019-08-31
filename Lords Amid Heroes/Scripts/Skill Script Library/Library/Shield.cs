@@ -7,7 +7,9 @@ public class Shield : BaseSkill, IEffect
 
     protected ObjectInteractable source;
     protected ObjectActor subject;
-    protected FloatAdjuster obs;
+    protected FloatAdjuster obs1;
+    protected FloatAdjuster obs2;
+    protected FloatAdjuster obs3;
 
     protected List<GameObject> instanceList;
     protected bool timed = true;
@@ -51,9 +53,15 @@ public class Shield : BaseSkill, IEffect
         this.duration = duration;
         this.value = value;
         setEnd(duration);
-        obs = subject.gameObject.AddComponent<FloatAdjuster>();
-        obs.setupObserver(subtractDamage);
-        subject.piercingDamageSubscribe(obs);
+        obs1 = subject.gameObject.AddComponent<FloatAdjuster>();
+        obs1.setupObserver(subtractDamage);
+        subject.piercingDamageSubscribe(obs1);
+        obs2 = subject.gameObject.AddComponent<FloatAdjuster>();
+        obs2.setupObserver(subtractDamage);
+        subject.bludgeoningDamageSubscribe(obs2);
+        obs3 = subject.gameObject.AddComponent<FloatAdjuster>();
+        obs3.setupObserver(subtractDamage);
+        subject.slashingDamageSubscribe(obs3);
         instanceList = new List<GameObject>();
     }
 
@@ -73,7 +81,9 @@ public class Shield : BaseSkill, IEffect
 
     public void end(ObjectActor subject)
     {
-        obs.complete();
+        obs1.complete();
+        obs2.complete();
+        obs3.complete();
         Destroy(this);
     }
 

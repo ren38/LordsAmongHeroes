@@ -2,12 +2,12 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class BleedEffect : MonoBehaviour, IEffect
+public class BurningEffect : MonoBehaviour, IEffect
 {
-    private const float BLEEDDURATION = 10.0f;
-    private const float DEGENSPEED = 2.0f;
+    private const float BURNINGDURATION = 3.0f;
+    private const float DEGENSPEED = 7.0f;
     private int multiple = 1;
-    private const int MAXMULTIPLIER = 10;
+    private const int MAXMULTIPLIER = 3;
     protected ObjectActor subject;
     protected ObjectInteractable source;
 
@@ -23,9 +23,9 @@ public class BleedEffect : MonoBehaviour, IEffect
     {
         instanceList = new List<GameObject>();
         timed = true;
-        duration = BLEEDDURATION;
+        duration = BURNINGDURATION;
         endTime = duration + Time.time;
-        effectName = "Bleed";
+        effectName = "Burning";
         description = string.Format("Lose {0} health per second.", DEGENSPEED * multiple);
         this.subject = subject;
         this.source = source;
@@ -57,7 +57,7 @@ public class BleedEffect : MonoBehaviour, IEffect
 
     public GameObject getIcon()
     {
-        GameObject newInstance = Instantiate(ConditionLibrary.Instance.getInstanceByID(0));
+        GameObject newInstance = Instantiate(ConditionLibrary.Instance.getInstanceByID(1));
         instanceList.Add(newInstance);
         effectFunctions.setupIcon(newInstance, name, description, timed, endTime);
         return newInstance;
@@ -69,12 +69,8 @@ public class BleedEffect : MonoBehaviour, IEffect
         {
             multiple++;
         }
-        endTime += duration;
-        if(endTime - Time.time >= 15.0f)
-        {
-            endTime = Time.time + 15.0f;
-        }
-        string newName = ("Bleed x" + multiple);
+        addDuration(2.0f);
+        string newName = ("Burning x" + multiple);
         string newDescription = string.Format("Lose {0} health per second.", DEGENSPEED * multiple);
         bool timed = true;
         effectFunctions.iconUpdate(instanceList, newName, newDescription, timed, endTime);
@@ -83,5 +79,14 @@ public class BleedEffect : MonoBehaviour, IEffect
     public float getDuration()
     {
         return duration;
+    }
+
+    public void addDuration(float addition)
+    {
+        endTime += addition;
+        if (endTime - Time.time >= 17.0f)
+        {
+            endTime = Time.time + 17.0f;
+        }
     }
 }

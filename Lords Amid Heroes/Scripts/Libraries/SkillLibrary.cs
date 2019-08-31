@@ -7,6 +7,23 @@ public class SkillLibrary : Singleton<SkillLibrary>
     [SerializeField]
     private List<GameObject> library;
 
+    void Start()
+    {
+        if(library != null)
+        {
+            int i = 0;
+            foreach(GameObject o in library)
+            {
+                BaseSkill skill = o.GetComponent<BaseSkill>();
+                if(skill != null)
+                {
+                    skill.setID(i);
+                    i++;
+                }
+            }
+        }
+    }
+
     public GameObject getByID(int id)
     {
         return library[id];

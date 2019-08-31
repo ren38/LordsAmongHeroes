@@ -10,3 +10,14 @@
     warden,
     zealot
 }
+
+public enum skillType
+{
+    elite,
+    attack,
+    curse,
+    enchantment,
+    stance,
+    song
+
+}

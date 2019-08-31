@@ -19,12 +19,22 @@ public class TeamMemberMotivator : BasicMotivator
         skillCount = skillBar.Length;
     }
 
-    public override void newTargetIndividual(GameObject newTarget)
+    public override void newTargetIndividual(ObjectActor newTarget)
     {
-        target = newTarget;
-        targetActor = newTarget.gameObject.GetComponent<ObjectActor>();
-        inCombat = true;
+        base.newTargetIndividual(newTarget);
         timer = Time.time + 20.0f;
+    }
+
+    public override void newTargetGroup(List<ObjectActor> newList)
+    {
+        base.newTargetGroup(newList);
+        timer = Time.time + 20.0f;
+    }
+
+    private void changeTarget()
+    {
+        Debug.Log(gameObject + " change target called");
+        targetActor = targets[rand.Next(targets.Count - 1)];
     }
 
     void Update()
@@ -35,9 +45,17 @@ public class TeamMemberMotivator : BasicMotivator
             interestLost();
         }
 
-        if (inCombat && actorSelf.queueCount() < planning)
+
+        if (inCombat)
         {
-            actorSelf.skillEnqueue(rand.Next(skillCount - 1), targetActor);
+            if (targetActor == null || targetActor.getDeathState() || rand.Next(1000) == 0)
+            {
+                changeTarget();
+            }
+            if (actorSelf.queueCount() < planning)
+            {
+                actorSelf.skillEnqueue(rand.Next(skillCount - 1), targetActor);
+            }
         }
     }
 }

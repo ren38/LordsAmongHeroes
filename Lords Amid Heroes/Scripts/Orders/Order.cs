@@ -4,13 +4,13 @@ using UnityEngine;
 
 public abstract class Order : MonoBehaviour
 {
-    protected string name;
+    protected string oName;
     protected string description;
     protected int id;
 
     public string getName()
     {
-        return name;
+        return oName;
     }
     public string getDescription()
     {

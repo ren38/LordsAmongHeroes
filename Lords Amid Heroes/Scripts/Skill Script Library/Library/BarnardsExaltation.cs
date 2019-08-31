@@ -2,21 +2,12 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class GloriousDawn : BaseSkill, IEffect
+public class BarnardsExaltation : BaseSkill, IEffect
 {
-    /*
-        skillName = "Glorious Dawn";
-        briefSkillDescription = "Target is healed for 10 over 5 seconds.";
-        fullSkillDescription = "Target gains 2 health per second over 5 seconds.";
-        energyCost = 10.0f;
-        sacrificeCost = 0.0f;
-        adrenalineCost = 0;
-        castTime = 0.5f;
-        cooldown = 2.5f;
-        range = 6.5f;
-    */
     [SerializeField]
-    protected float REGENSPEED = 20.0f;
+    protected float REGENSPEED = 10.0f;
+    [SerializeField]
+    protected float DEGENSPEED = 15.0f;
     protected ObjectInteractable source;
     protected ObjectActor subject;
 
@@ -25,9 +16,6 @@ public class GloriousDawn : BaseSkill, IEffect
     [SerializeField]
     protected float duration;
     protected float endTime;
-    [SerializeField]
-    protected float stackHealing = 30.0f;
-
 
     public override void activate(ObjectActor self, ObjectCombatable target)
     {
@@ -35,11 +23,11 @@ public class GloriousDawn : BaseSkill, IEffect
         ObjectInteractable source = self as ObjectInteractable;
         if (targetActor != null)
         {
-            GloriousDawn preexisting = target.gameObject.GetComponent<GloriousDawn>();
+            BarnardsExaltation preexisting = target.gameObject.GetComponent<BarnardsExaltation>();
             if (preexisting == null)
             {
-                GloriousDawn regeneration = target.gameObject.AddComponent<GloriousDawn>();
-                regeneration.setup(targetActor, source, skillName, briefSkillDescription, duration, stackHealing);
+                BarnardsExaltation regeneration = target.gameObject.AddComponent<BarnardsExaltation>();
+                regeneration.setup(targetActor, source, skillName, briefSkillDescription, duration, REGENSPEED, DEGENSPEED);
                 targetActor.applyNewEffect(regeneration);
             }
             else
@@ -50,8 +38,8 @@ public class GloriousDawn : BaseSkill, IEffect
     }
 
     public void setup(
-        ObjectActor subject, ObjectInteractable source, 
-        string name, string desc, float duration, float stackHealing
+        ObjectActor subject, ObjectInteractable source,
+        string name, string desc, float duration, float regen, float degen
         )
     {
         this.subject = subject; // order passed in.
@@ -59,19 +47,28 @@ public class GloriousDawn : BaseSkill, IEffect
         skillName = name;
         briefSkillDescription = desc;
         this.duration = duration;
-        this.stackHealing = stackHealing;
+        this.REGENSPEED = regen;
+        this.DEGENSPEED = degen;
         setEnd(duration);
         instanceList = new List<GameObject>();
     }
 
     public void apply(float deltaTime)
     {
-        subject.takeHealingNoObs(REGENSPEED * deltaTime, source);
+        if (subject.gameObject.GetComponent<BleedEffect>() != null)
+        {
+            subject.takeHealingNoObs(REGENSPEED * deltaTime, source);
+        }
+        else
+        {
+            subject.takeDamageNoObs(DEGENSPEED * deltaTime, source);
+        }
     }
 
     public float getEnd()
     {
-        return endTime; }
+        return endTime;
+    }
 
     public void setEnd(float num)
     {
@@ -85,7 +82,7 @@ public class GloriousDawn : BaseSkill, IEffect
 
     public GameObject getIcon()
     {
-        GameObject newInstance = Instantiate(SkillLibrary.Instance.getByID(3));
+        GameObject newInstance = Instantiate(SkillLibrary.Instance.getByID(6));
         instanceList.Add(newInstance);
         effectFunctions.setupIcon(newInstance, skillName, briefSkillDescription, timed, endTime);
         return newInstance;
@@ -93,7 +90,7 @@ public class GloriousDawn : BaseSkill, IEffect
 
     public void stack()
     {
-        subject.takeRadiantHealing(stackHealing, source);
+        return;
     }
 
     public float getDuration()

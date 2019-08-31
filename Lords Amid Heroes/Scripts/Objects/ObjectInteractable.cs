@@ -16,7 +16,12 @@ public class ObjectInteractable : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
+        setupInteractable();
+    }
 
+    public void setupInteractable()
+    {
+        return;
     }
 
     [SerializeField]
@@ -68,4 +73,5 @@ public class ObjectInteractable : MonoBehaviour
     {
         return objectType;
     }
+
 }

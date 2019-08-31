@@ -100,6 +100,33 @@ public class GameObjectObserver : Observer<GameObject>
     }
 }
 
+public class comboObserver : Observer<(ObjectInteractable, BaseSkill)>
+{
+    private List<comboObserver> observerList;
+
+    public override void setupObserver(Func<(ObjectInteractable, BaseSkill)> activate)
+    {
+        this.activate = activate;
+    }
+
+    public override void trigger((ObjectInteractable, BaseSkill) datum)
+    {
+        activate(datum);
+    }
+
+    public void connect(List<comboObserver> observers)
+    {
+        this.observerList = observers;
+    }
+
+    public void complete()
+    {
+        if (observerList.Contains(this))
+            observerList.Remove(this);
+        Destroy(this);
+    }
+}
+
 /*
  * unsure if I want to implement this.
 public class ActorObserver : Observer<ObjectActor>

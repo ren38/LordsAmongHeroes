@@ -2,14 +2,13 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class BleedEffect : MonoBehaviour, IEffect
+public class ChilledEffect : MonoBehaviour, IEffect
 {
-    private const float BLEEDDURATION = 10.0f;
-    private const float DEGENSPEED = 2.0f;
-    private int multiple = 1;
-    private const int MAXMULTIPLIER = 10;
+    private const float CHILLEDDURATION = 20.0f;
+    private float SPEEDLOSS = 0.1f;
     protected ObjectActor subject;
     protected ObjectInteractable source;
+    protected FloatAdjuster obs;
 
     protected int conditionID;
     protected List<GameObject> instanceList;
@@ -23,17 +22,20 @@ public class BleedEffect : MonoBehaviour, IEffect
     {
         instanceList = new List<GameObject>();
         timed = true;
-        duration = BLEEDDURATION;
+        duration = CHILLEDDURATION;
         endTime = duration + Time.time;
-        effectName = "Bleed";
-        description = string.Format("Lose {0} health per second.", DEGENSPEED * multiple);
+        effectName = "Burning";
+        description = string.Format("Skill activation takes {0}x longer.", 1.0f + SPEEDLOSS);
         this.subject = subject;
         this.source = source;
+        obs = subject.gameObject.AddComponent<FloatAdjuster>();
+        obs.setupObserver(change);
+        subject.skillStartSubscribe(obs);
     }
 
     public void apply(float deltaTime)
     {
-        subject.takeDamageNoObs(DEGENSPEED * deltaTime * multiple, source);
+        return;
     }
 
     public float getEnd()
@@ -44,20 +46,24 @@ public class BleedEffect : MonoBehaviour, IEffect
         endTime = num + Time.time;
     }
 
+    public float change(float num)
+    {
+        return num + SPEEDLOSS;
+    }
+
     public void end(ObjectActor subject)
     {
-        multiple = 1;
         Destroy(this);
     }
 
-    public int getMult()
+    public float getSpeedloss()
     {
-        return multiple;
+        return SPEEDLOSS;
     }
 
     public GameObject getIcon()
     {
-        GameObject newInstance = Instantiate(ConditionLibrary.Instance.getInstanceByID(0));
+        GameObject newInstance = Instantiate(ConditionLibrary.Instance.getInstanceByID(2));
         instanceList.Add(newInstance);
         effectFunctions.setupIcon(newInstance, name, description, timed, endTime);
         return newInstance;
@@ -65,17 +71,10 @@ public class BleedEffect : MonoBehaviour, IEffect
 
     public void stack()
     {
-        if (multiple < MAXMULTIPLIER)
-        {
-            multiple++;
-        }
-        endTime += duration;
-        if(endTime - Time.time >= 15.0f)
-        {
-            endTime = Time.time + 15.0f;
-        }
-        string newName = ("Bleed x" + multiple);
-        string newDescription = string.Format("Lose {0} health per second.", DEGENSPEED * multiple);
+        addDuration(8.0f);
+        addLoss(0.1f);
+        string newName = ("Chilled x" + (1.0f + SPEEDLOSS));
+        string newDescription = string.Format("Skill activation takes {0}x longer.", 1.0f + SPEEDLOSS);
         bool timed = true;
         effectFunctions.iconUpdate(instanceList, newName, newDescription, timed, endTime);
     }
@@ -83,5 +82,23 @@ public class BleedEffect : MonoBehaviour, IEffect
     public float getDuration()
     {
         return duration;
+    }
+
+    public void addLoss(float addition)
+    {
+        SPEEDLOSS += addition;
+        if (SPEEDLOSS >= 2.0f)
+        {
+            SPEEDLOSS = 2.0f;
+        }
+    }
+
+    public void addDuration(float addition)
+    {
+        endTime += addition;
+        if (endTime - Time.time >= 60.0f)
+        {
+            endTime = Time.time + 60.0f;
+        }
     }
 }

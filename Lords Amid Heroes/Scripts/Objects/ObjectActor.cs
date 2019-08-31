@@ -35,6 +35,8 @@ public class ObjectActor : ObjectCombatable
     [SerializeField]
     private GameObject[] skillBar = new GameObject[SKILLBARSIZE];
 
+    private team myTeam;
+
     // Start is called before the first frame update
     void Awake()
     {
@@ -48,6 +50,7 @@ public class ObjectActor : ObjectCombatable
         effectRemovalObservers = new List<IntObserver>();
         effectAdditionObservers = new List<GameObjectObserver>();
         effectListChangeObservers = new List<GameObjectObserver>();
+        castingSpeedAdjusters = new List<FloatAdjuster>();
         cooldown = new float[8];
         base.setupCombatable();
         initializeOrders();
@@ -109,6 +112,10 @@ public class ObjectActor : ObjectCombatable
     }// percent change should be 0 < x >= 1
     #endregion
 
+    #region General Functions
+    public team getTeam(){ return myTeam; }
+    public void setTeam(team newTeam) { myTeam = newTeam; }
+    #endregion
 
     private void Update()
     {
@@ -228,7 +235,6 @@ public class ObjectActor : ObjectCombatable
     #endregion
     //~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-
     //~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     #region Effect Handling
 
@@ -261,9 +267,6 @@ public class ObjectActor : ObjectCombatable
         for (int i = endEffectsIndex.Count - 1; i >= 0; i--)
         {
             int ind = endEffectsIndex.Pop();
-            IEffect temp = activeEffects[ind];
-            activeEffects.RemoveAt(ind);
-            temp.end(this);
             foreach (var observer in effectRemovalObservers)
             {
                 observer.trigger(ind);
@@ -272,6 +275,9 @@ public class ObjectActor : ObjectCombatable
             {
                 observer.trigger(gameObject);
             }
+            IEffect temp = activeEffects[ind];
+            activeEffects.RemoveAt(ind);
+            temp.end(this);
         }
     }
 
@@ -328,7 +334,7 @@ public class ObjectActor : ObjectCombatable
 
     //~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     #region Conditions
-    public void bleedEffect(ObjectInteractable source)
+    public void beginBleed(ObjectInteractable source)
     {
         //check if there is already a bleed effect active.
         //if not, start one. else stack one
@@ -344,7 +350,76 @@ public class ObjectActor : ObjectCombatable
             preexisting.stack();
         }
     }
+    
+    public int endBleed()
+    {
+        BleedEffect preexisting = gameObject.GetComponent<BleedEffect>();
+        if (preexisting == null)
+        {
+            int mult = preexisting.getMult();
+            preexisting.end(this);
+            return mult;
+        }
+        return 0;
+    }
 
+    public void beginBurning(ObjectInteractable source)
+    {
+        //check if there is already a bleed effect active.
+        //if not, start one. else stack one
+        BurningEffect preexisting = gameObject.GetComponent<BurningEffect>();
+        if (preexisting == null)
+        {
+            BurningEffect burning = gameObject.AddComponent<BurningEffect>();
+            burning.setup(this, source);
+            applyNewEffect(burning);
+        }
+        else
+        {
+            preexisting.stack();
+        }
+    }
+
+    public int endBurning()
+    {
+        BurningEffect preexisting = gameObject.GetComponent<BurningEffect>();
+        if (preexisting == null)
+        {
+            int mult = preexisting.getMult();
+            preexisting.end(this);
+            return mult;
+        }
+        return 0;
+    }
+
+    public void beginChilled(ObjectInteractable source)
+    {
+        //check if there is already a bleed effect active.
+        //if not, start one. else stack one
+        ChilledEffect preexisting = gameObject.GetComponent<ChilledEffect>();
+        if (preexisting == null)
+        {
+            ChilledEffect chilled = gameObject.AddComponent<ChilledEffect>();
+            chilled.setup(this, source);
+            applyNewEffect(chilled);
+        }
+        else
+        {
+            preexisting.stack();
+        }
+    }
+
+    public float endChilled()
+    {
+        ChilledEffect preexisting = gameObject.GetComponent<ChilledEffect>();
+        if (preexisting == null)
+        {
+            float mult = preexisting.getSpeedloss();
+            preexisting.end(this);
+            return mult;
+        }
+        return 0;
+    }
 
     #endregion
     //~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -354,35 +429,35 @@ public class ObjectActor : ObjectCombatable
 
     //~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     #region Skillbooks
-        [SerializeField]
-    private List<int> skillbook;
+    [SerializeField]
+        private List<int> skillbook;
 
-    public void addSkillToSkillbook(int newSkill)
-    {
-        if(!skillbook.Contains(newSkill))
+        public void addSkillToSkillbook(int newSkill)
         {
-            skillbook.Add(newSkill);
+            if(!skillbook.Contains(newSkill))
+            {
+                skillbook.Add(newSkill);
+            }
         }
-    }
 
-    public void addSkillListToSkillbook(List<int> skillList)
-    {
-        foreach(int i in skillList)
+        public void addSkillListToSkillbook(List<int> skillList)
         {
-            addSkillToSkillbook(i);
+            foreach(int i in skillList)
+            {
+                addSkillToSkillbook(i);
+            }
         }
-    }
 
-    public List<GameObject> getSkillBookGameObjects()
-    {
-        return SkillLibrary.Instance.getByListID(skillbook);
-    }
+        public List<GameObject> getSkillBookGameObjects()
+        {
+            return SkillLibrary.Instance.getByListID(skillbook);
+        }
 
-    public List<int> getSkillBookInts()
-    {
-        return skillbook;
-    }
-    #endregion
+        public List<int> getSkillBookInts()
+        {
+            return skillbook;
+        }
+        #endregion
     //~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     //~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -475,15 +550,59 @@ public class ObjectActor : ObjectCombatable
         {
             nextTarget = target;
             skillActivating = true;
+            float activateMultiple = 1;
+            foreach(FloatAdjuster i in castingSpeedAdjusters)
+            {
+                activateMultiple = i.trigger(activateMultiple);
+            }
             skillStartTime = Time.time;
-            skillFinishTime = Time.time + skillBeingActivated.getCastTime();
+            skillFinishTime = Time.time + (skillBeingActivated.getCastTime() * activateMultiple);
             changeCurrentEnergy(-skillBeingActivated.getEnergyCost());
             foreach (var observer in dequeueObservers)
             {
                 observer.trigger(0);
             }
+            target.gettingTargetted(this, skillBeingActivated);
+            addTargets(target);
         }
     }
+
+    private void addTargets(ObjectCombatable newTarget)
+    {
+        Debug.Log("adding target");
+        if (myTeam != null)
+        {
+            Debug.Log(gameObject.name + " myTeam != null");
+            ObjectActor actorTarget = (ObjectActor)newTarget;
+            if (actorTarget != null)
+            {
+                Debug.Log("actor target found");
+                team newEnemyTeam = actorTarget.getTeam();
+                if(newEnemyTeam != null)
+                {
+                    Debug.Log("adding team");
+                    myTeam.addEnemyTeam(newEnemyTeam);
+                }
+                else
+                {
+                    Debug.Log("adding individual");
+                    myTeam.addEnemyIndividual(newTarget);
+                }
+            }
+        }
+    }
+    /*
+        * damage subscription. Returns the amount of damage taken.
+        */
+    private List<FloatAdjuster> castingSpeedAdjusters;
+
+    public void skillStartSubscribe(FloatAdjuster observer)
+    {
+        if (!castingSpeedAdjusters.Contains(observer))
+            castingSpeedAdjusters.Add(observer);
+        observer.connect(castingSpeedAdjusters);
+    }
+
 
     public void abruptSkillCancel()
     {
@@ -507,9 +626,14 @@ public class ObjectActor : ObjectCombatable
         return skillActivating;
     }
 
+    public float getSkillFinishTime()
+    {
+        return skillFinishTime;
+    }
+
     public float getSkillProgress()
     {
-        return ((Time.time - skillStartTime) / skillBeingActivated.getCastTime());
+        return ((Time.time - skillStartTime) / (skillFinishTime - skillStartTime));
     }
 
     private void finishSkill()

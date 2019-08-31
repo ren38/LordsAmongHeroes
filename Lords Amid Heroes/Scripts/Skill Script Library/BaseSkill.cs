@@ -24,7 +24,13 @@ public abstract class BaseSkill : MonoBehaviour
     protected float cooldown;
     [SerializeField]
     protected float range;
+    [SerializeField]
+    private int ID;
+    [SerializeField]
+    protected List<skillType> types;
 
+    public void setID(int newID){ID = newID;}
+    public int getID() { return ID; }
     public abstract void activate(ObjectActor self, ObjectCombatable target);
     //public abstract bool validateTargetting(ObjectCombatable target);
     public virtual OrderEnum getOrder() { return order; }
@@ -37,4 +43,5 @@ public abstract class BaseSkill : MonoBehaviour
     public virtual string getName() { return skillName; }
     public virtual string getShortDescription() { return briefSkillDescription; }
     public virtual string getLongDescription() { return fullSkillDescription; }
+    public virtual List<skillType> getTypes() { return types; }
 }

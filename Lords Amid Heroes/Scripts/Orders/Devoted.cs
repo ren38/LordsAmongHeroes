@@ -11,7 +11,7 @@ public class Devoted : Order
     // Start is called before the first frame update
     void Start()
     {
-        name = NAME;
+        oName = NAME;
         description = DESCRIPTION;
         id = ID;
     }
